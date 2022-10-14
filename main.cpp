@@ -11,6 +11,7 @@ class Node {
         Node(const Node &node) {
             n = node.n;
             state = node.state;
+            initial_state = node.initial_state;
         }
 
         void readPuzzle() {
@@ -21,6 +22,8 @@ class Node {
                     cin >> state[i][j];
                 }
             }
+            cout << endl;
+            initial_state = state;
         }
 
         void setPuzzle() {
@@ -29,10 +32,12 @@ class Node {
                 {4, 5, 6},
                 {0, 7, 8}
             };
+            initial_state = state;
         }
 
         void setPuzzle(vector<vector<int>> &puzzle) {
             state = puzzle;
+            initial_state = state;
         }
 
         bool GOAL_STATE() {
@@ -61,12 +66,31 @@ class Node {
             }
         }
 
+        void setFail() {
+            fail = true;
+        }
 
+        bool fail; //denote failure node
     private:
+        vector<string> moves; // solution moves
+        vector<vector<int>> initial_state;
         vector<vector<int>> state;
         int n; // size of puzzle (n x n)
 };
 
+Node general_search(Node &problem) {
+    queue<Node> nodes;
+
+    while(true) {
+        if(nodes.empty()) {
+            Node failure(1);
+            failure.setFail();
+            return failure;
+        }
+    }
+
+    return problem;
+}
 
 
 int main() {
@@ -87,6 +111,11 @@ int main() {
     problem.setPuzzle(input);
     problem.print();
     problem.GOAL_STATE() ? cout << "GOAL!" << endl : cout << "NOT GOAL STATE" << endl;
+
+    Node result = general_search(problem);
+    if(result.fail) {
+        cout << "FAILURE" << endl;
+    }
 
     return 0;
 }
