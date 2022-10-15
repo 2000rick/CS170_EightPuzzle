@@ -1,6 +1,7 @@
 #include <bits/stdc++.h>
 using namespace std;
 
+
 class Node {
     public:
         Node(int size) {
@@ -8,10 +9,18 @@ class Node {
             state = vector<vector<int>>(n, vector<int>(n));
         }
 
+        Node(vector<vector<int>> init_state) {
+            n = init_state.size();
+            initial_state = init_state;
+            state = init_state;
+            search = 0;
+        }
+        
         Node(const Node &node) {
             n = node.n;
-            state = node.state;
             initial_state = node.initial_state;
+            state = node.state;
+            search = 0;
         }
 
         void readPuzzle() {
@@ -70,13 +79,29 @@ class Node {
             fail = true;
         }
 
-        bool fail; //denote failure node
-    private:
+        
         vector<string> moves; // solution moves
         vector<vector<int>> initial_state;
         vector<vector<int>> state;
         int n; // size of puzzle (n x n)
+        int cost; // determines the order in queue
+        int search; // search type: 0 = Uniform Cost, 1 = A* w/ Misplaced Tiles, 2 = A* w/ Manhattan Distance
+        bool fail; //denote failure node
+        vector<pair<int, int>> OPERATORS = {
+             {0, -1}, {0, 1}, {1, 0}, {-1, 0} // left, right, down, up
+        }; 
+
 };
+
+struct comp {
+    inline bool operator()(Node const &a, Node const &b) { return a.cost > b.cost; }
+};
+
+typedef priority_queue<Node, vector<Node>, comp> p_queue;
+p_queue MAKE_QUEUE() {
+    priority_queue<Node, vector<Node>, comp> nodes;
+    return nodes;
+}
 
 Node general_search(Node &problem) {
     queue<Node> nodes;
@@ -116,6 +141,8 @@ int main() {
     if(result.fail) {
         cout << "FAILURE" << endl;
     }
+
+    MAKE_QUEUE();
 
     return 0;
 }
