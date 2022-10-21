@@ -2,7 +2,7 @@
 #include <vector>
 #include <queue>
 #include <sstream>
-#include <unordered_set>
+#include <unordered_map>
 #include <set>
 using namespace std;
 
@@ -110,6 +110,43 @@ class Node {
             string output = sol.str();
             cout << output.substr(0, output.size()-2) << endl; // remove last comma and space in final output
         }
+
+        void walk_through() {
+            cout << "\nWalk Through: " << endl;
+            if(!moves.size()) {
+                cout << "Puzzle was already solved!" << endl;
+                return;
+            }
+            int rz=-1, cz=-1; // row and column of '0' (the blank tile)
+            for(int i=0; i<n && rz==-1; ++i) {
+                for(int j=0; j<n; ++j) {
+                    if(initial_state[i][j] == 0) {
+                        rz = i;
+                        cz = j;
+                        break;
+                    }
+                }
+            }
+
+            unordered_map<string, pair<int, int>> moves_map = {
+                {"Left", {0, -1}}, {"Right", {0, 1}}, {"Down", {1, 0}}, {"Up", {-1, 0}}
+            };
+            auto walk = initial_state;
+            for(int i=0; i<(int)moves.size(); ++i) {
+                int r = rz + moves_map[moves[i]].first;
+                int c = cz + moves_map[moves[i]].second;
+                swap(walk[rz][cz], walk[r][c]);
+                rz = r; cz = c;
+                cout << "After move " << i+1 << ":\n";
+                for(int j=0; j<n; ++j) {
+                    for(int k=0; k<n; ++k) {
+                        cout << walk[j][k] << " ";
+                    } cout << endl;
+                }
+                cout << endl;
+            }
+
+        }
 };
 
 /*This is a modified custom comparator (for priority queue specifically), original version was taken from here:
@@ -141,12 +178,13 @@ bool valid_index(int r, int c, int n) {
 }
 
 void QUEUEING_FUNCTION(p_queue &nodes, const Node &node, const vector<pair<int, int>> &OPERATORS) {
-    int rz=0, cz=0; // row and column of zero (aka the blank tile)
-    for(int i=0; i<node.n; ++i) {
+    int rz=-1, cz=-1; // row and column of zero (aka the blank tile)
+    for(int i=0; i<node.n && rz == -1; ++i) {
         for(int j=0; j<node.n; ++j) {
             if(node.state[i][j] == 0) {
                 rz = i;
                 cz = j;
+                break;
             }
         }
     }
@@ -251,6 +289,7 @@ int main() {
         // result.print();
         result.solution();
         cout << "Solution Depth: " << result.moves.size() << '\n' << "Nodes Expanded: " << result.expanded << '\n';
+        // result.walk_through();
         cout << "=======================================================================\n\n" << flush;
     }
 
