@@ -2,6 +2,8 @@
 #include <vector>
 #include <queue>
 #include <sstream>
+#include <unordered_set>
+#include <set>
 using namespace std;
 
 class Node {
@@ -17,6 +19,7 @@ class Node {
         int cost; // determines the order in queue
         int search; // search type: 0 = Uniform Cost, 1 = A* w/ Misplaced Tiles, 2 = A* w/ Manhattan Distance
         bool fail=false; //denote failure node
+        unsigned int expanded=0; // number of nodes expanded
 
         Node(int size) {
             n = size;
@@ -56,8 +59,8 @@ class Node {
         }
 
         void setPuzzle(vector<vector<int>> &puzzle) {
+            initial_state = puzzle;
             state = puzzle;
-            initial_state = state;
         }
 
         bool GOAL_STATE() {
@@ -162,6 +165,8 @@ void QUEUEING_FUNCTION(p_queue &nodes, const Node &node, const vector<pair<int, 
 }
 
 Node general_search(Node &problem, void (*QUEUEING_FUNCTION)(p_queue&, const Node&, const vector<pair<int, int>> &)) {
+    unsigned int nodesExpanded = 0;
+    set<vector<vector<int>>> visited;
     p_queue nodes = MAKE_QUEUE(MAKE_NODE(problem.initial_state));
     while(true) {
         if(nodes.empty()) {
@@ -171,8 +176,15 @@ Node general_search(Node &problem, void (*QUEUEING_FUNCTION)(p_queue&, const Nod
         }
 
         Node node = REMOVE_FRONT(nodes);
+        if(visited.find(node.state) != visited.end()) {
+            // cout << "skipping...\nCurrent expansion: " << nodesExpanded << endl;
+            continue;
+        }
+        node.expanded = nodesExpanded;
         if(node.GOAL_STATE()) return node;
+        ++nodesExpanded;
         QUEUEING_FUNCTION(nodes, node, node.OPERATORS);
+        visited.insert(node.state);
     }
 
     return problem; //never reached
@@ -182,18 +194,6 @@ Node general_search(Node &problem, void (*QUEUEING_FUNCTION)(p_queue&, const Nod
 int main() {
     ios_base::sync_with_stdio(false);
     cin.tie(0);
-
-    Node problem(3);
-    // problem.print();
-    // problem.readPuzzle();
-    // problem.print();
-    // problem.GOAL_STATE() ? cout << "GOAL!" << endl : cout << "NOT GOAL STATE" << endl;
-
-    // vector<vector<int>> input = {
-    //     {1, 2, 3},
-    //     {4, 5, 6},
-    //     {0, 7, 8}
-    // };
 
     vector<vector<vector<int>>> puzzles = {
         {
@@ -239,20 +239,19 @@ int main() {
     };
 
     for(int i=0; i<(int)puzzles.size(); ++i) {
-        problem.setPuzzle(puzzles[i]);
-        // cout << "Problem:\n";
-        // problem.print();
+        Node problem(puzzles[i]);
         Node result = general_search(problem, &QUEUEING_FUNCTION);
         result.print_prob();
         if(result.fail) {
-            cout << "\nFAILURE" << endl;
+            cout << "\nFAILURE\n";
         }
         else {
-            cout << "\nSUCCESS" << endl;
+            cout << "\nSUCCESS\n";
         }
-        result.print();
+        // result.print();
         result.solution();
-        cout << "===============================================================\n\n" << flush;
+        cout << "Solution Depth: " << result.moves.size() << '\n' << "Nodes Expanded: " << result.expanded << '\n';
+        cout << "=======================================================================\n\n" << flush;
     }
 
     return 0;
