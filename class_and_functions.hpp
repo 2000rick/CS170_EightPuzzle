@@ -4,6 +4,7 @@
 #include <sstream>
 #include <unordered_map>
 #include <set>
+#include <chrono>
 using namespace std;
 
 class Node {
@@ -289,12 +290,20 @@ void Run() {
         cout << "Enter search type:\n1 for Uniform Cost Search\n2 for A* with Misplaced Tiles\n3 for A* with Manhattan Distance\n" << flush;
         int search = 0;
         cin >> search; 
+
         Node customPuzzle(3);
         customPuzzle.search = search;
         customPuzzle.readPuzzle();
+
+        chrono::steady_clock::time_point begin = chrono::steady_clock::now();
         Node solution = general_search(customPuzzle, &QUEUEING_FUNCTION);
+        chrono::steady_clock::time_point end = chrono::steady_clock::now();
+        cout << "Time Elapsed: " << chrono::duration_cast<chrono::milliseconds>(end - begin).count() << " milliseconds or about "
+        << chrono::duration_cast<chrono::seconds> (end - begin).count() << " seconds\n";
+
         if(solution.fail) cout << "\nFailure\n";
         else cout << "\nSUCCESS!\n";
+
         solution.solution();
         if(!solution.fail) {
             cout << "Solution Depth: " << solution.moves.size() << '\n';
@@ -310,6 +319,7 @@ void Run() {
     cout << "Enter search type:\n1 for Uniform Cost Search\n2 for A* with Misplaced Tiles\n3 for A* with Manhattan Distance\n" << flush;
     int search_type = 0;
     cin >> search_type; 
+
     for(int i=0; i<(int)puzzles.size(); ++i) {
         Node problem(puzzles[i]);
         problem.search = search_type-1;
@@ -321,7 +331,6 @@ void Run() {
         else {
             cout << "\nSUCCESS\n";
         }
-        // result.print();
         result.solution();
         cout << "Solution Depth: " << result.moves.size() << '\n' << "Nodes Expanded: " << result.expanded << '\n';
         // result.walk_through();

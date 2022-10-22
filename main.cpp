@@ -27,9 +27,7 @@ Node general_search(Node &problem, void (*QUEUEING_FUNCTION)(p_queue&, const Nod
 }
 
 int main() {
-    ios_base::sync_with_stdio(false);
-    cin.tie(0);
-
     Run();
+    
     return 0;
 }
