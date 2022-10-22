@@ -177,6 +177,37 @@ bool valid_index(int r, int c, int n) {
     return (r >= 0 && c >= 0 && r < n && c < n);
 }
 
+/*Observe that we can calculate the goal state for any value 'x' using:
+ row = (x-1)/n and col = (x-1)%n, the -1 is because of 0 indexing. */
+int calcManhattan(const vector<vector<int>> &state) {
+    int n = state.size();
+    int heuristic = 0; //This is h(n)
+    int count = 0;
+    for(int i=0; i<n; ++i) {
+        for(int j=0; j<n; ++j) {
+            if(state[i][j] == 0 || state[i][j] == ++count) continue;
+            int row = (state[i][j]-1)/n;
+            int col = (state[i][j]-1)%n;
+            heuristic += abs(row-i) + abs(col-j);
+        }
+    }
+    return heuristic;
+}
+
+//count misplaced tiles
+int calcMisplaced(const vector<vector<int>> &state) { 
+    int n = state.size();
+    int heuristic = 0; //This is h(n)
+    int count = 0;
+    for(int i=0; i<n; ++i) {
+        for(int j=0; j<n; ++j) {
+            if(state[i][j] == 0 || state[i][j] == ++count) continue;
+            ++heuristic;
+        }
+    }
+    return heuristic;
+}
+
 void QUEUEING_FUNCTION(p_queue &nodes, const Node &node, const vector<pair<int, int>> &OPERATORS) {
     int rz=-1, cz=-1; // row and column of zero (aka the blank tile)
     for(int i=0; i<node.n && rz == -1; ++i) {
@@ -232,6 +263,13 @@ Node general_search(Node &problem, void (*QUEUEING_FUNCTION)(p_queue&, const Nod
 int main() {
     ios_base::sync_with_stdio(false);
     cin.tie(0);
+    vector<vector<int>> input = {
+        {3, 2, 8},
+        {4, 5, 6},
+        {7, 1, 0}
+    };
+    cout << "testing manhattan distance: " << calcManhattan(input) << endl;
+    cout << "testing misplaced tiles: " << calcMisplaced(input) << endl;
 
     vector<vector<vector<int>>> puzzles = {
         {
