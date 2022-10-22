@@ -15,26 +15,23 @@ class Node {
         };
         vector<string> operators_map = {"Left", "Right", "Down", "Up"}; 
         vector<string> moves; // solution moves
-        int n; // size of puzzle (n x n)
-        int cost; // determines the order in queue
-        int search; // search type: 0 = Uniform Cost, 1 = A* w/ Misplaced Tiles, 2 = A* w/ Manhattan Distance
-        bool fail=false; //denote failure node
+        int n;          // size of puzzle (n x n)
+        int cost=0;     // determines the order in queue, g(n) + h(n) where h(n) is 0 for Uniform Cost Search
+        int current=0;  // this is g(n) in A*
+        int search=0;   // search type: 0 = Uniform Cost, 1 = A* w/ Misplaced Tiles, 2 = A* w/ Manhattan Distance
+        bool fail=0;    // denote failure node
         unsigned int expanded=0; // number of nodes expanded
 
         Node(int size) {
             n = size;
             initial_state = vector<vector<int>>(n, vector<int>(n));
             state = initial_state;
-            search = 0;
-            cost = 0;
         }
 
         Node(vector<vector<int>> init_state) {
             n = init_state.size();
             initial_state = init_state;
             state = init_state;
-            search = 0;
-            cost = 0;
         }
 
         void readPuzzle() {
@@ -98,6 +95,7 @@ class Node {
         }
 
         void solution() {
+            if(fail) return;
             cout << "\nSolution: " << endl;
             if(!moves.size()) {
                 cout << "Puzzle was already solved!" << endl;
@@ -162,8 +160,9 @@ p_queue MAKE_QUEUE(Node node) {
     return nodes;
 }
 
-Node MAKE_NODE(vector<vector<int>> &initial_state) {
+Node MAKE_NODE(vector<vector<int>> &initial_state, int search) {
     Node node(initial_state);
+    node.search = search;
     return node;
 }
 
@@ -205,6 +204,7 @@ int calcMisplaced(const vector<vector<int>> &state) {
             ++heuristic;
         }
     }
+
     return heuristic;
 }
 
@@ -220,14 +220,17 @@ void QUEUEING_FUNCTION(p_queue &nodes, const Node &node, const vector<pair<int, 
         }
     }
 
-    for (int i=0; i < (int)OPERATORS.size(); ++i) {
+    for(int i=0; i < (int)OPERATORS.size(); ++i) {
         int r = rz + OPERATORS[i].first;
         int c = cz + OPERATORS[i].second;
         if (valid_index(r, c, node.n)) {
             Node expanded = node;
             swap(expanded.state[rz][cz], expanded.state[r][c]); // equivalent to moving the blank tile to the new position
             expanded.moves.push_back(expanded.operators_map[i]);
-            expanded.cost += 1;
+            expanded.current += 1;
+            expanded.cost = expanded.current;
+            if(expanded.search == 1) expanded.cost += calcMisplaced(expanded.state);
+            else if(expanded.search == 2) expanded.cost += calcManhattan(expanded.state);
             nodes.push(expanded);
         }
     }
@@ -236,17 +239,17 @@ void QUEUEING_FUNCTION(p_queue &nodes, const Node &node, const vector<pair<int, 
 Node general_search(Node &problem, void (*QUEUEING_FUNCTION)(p_queue&, const Node&, const vector<pair<int, int>> &)) {
     unsigned int nodesExpanded = 0;
     set<vector<vector<int>>> visited;
-    p_queue nodes = MAKE_QUEUE(MAKE_NODE(problem.initial_state));
+    p_queue nodes = MAKE_QUEUE(MAKE_NODE(problem.initial_state, problem.search));
     while(true) {
         if(nodes.empty()) {
             Node failure(1);
+            failure.expanded = nodesExpanded;
             failure.fail = true;
             return failure;
         }
 
         Node node = REMOVE_FRONT(nodes);
         if(visited.find(node.state) != visited.end()) {
-            // cout << "skipping...\nCurrent expansion: " << nodesExpanded << endl;
             continue;
         }
         node.expanded = nodesExpanded;
@@ -263,13 +266,6 @@ Node general_search(Node &problem, void (*QUEUEING_FUNCTION)(p_queue&, const Nod
 int main() {
     ios_base::sync_with_stdio(false);
     cin.tie(0);
-    vector<vector<int>> input = {
-        {3, 2, 8},
-        {4, 5, 6},
-        {7, 1, 0}
-    };
-    cout << "testing manhattan distance: " << calcManhattan(input) << endl;
-    cout << "testing misplaced tiles: " << calcMisplaced(input) << endl;
 
     vector<vector<vector<int>>> puzzles = {
         {
@@ -314,8 +310,37 @@ int main() {
         }
     };
 
+    cout << "Would you like to input a custom puzzle? (y/n): " << flush;
+    char choice;
+    cin >> choice;
+    if(choice == 'y' || choice == 'Y') {
+        cout << "Enter search type:\n1 for Uniform Cost Search\n2 for A* with Misplaced Tiles\n3 for A* with Manhattan Distance\n" << flush;
+        int search = 0;
+        cin >> search; 
+        Node customPuzzle(3);
+        customPuzzle.search = search;
+        customPuzzle.readPuzzle();
+        Node solution = general_search(customPuzzle, &QUEUEING_FUNCTION);
+        if(solution.fail) cout << "\nFailure\n";
+        else cout << "\nSUCCESS!\n";
+        solution.solution();
+        if(!solution.fail) {
+            cout << "Solution Depth: " << solution.moves.size() << '\n';
+        }
+        cout << "Nodes Expanded: " << solution.expanded << '\n';
+        cout << "=======================================================================\n\n" << flush;
+    }
+
+    cout << "Would you like to run all 8 sample puzzles? (y/n): " << flush;
+    cin >> choice;
+    if(choice != 'y' && choice != 'Y') return 0;
+
+    cout << "Enter search type:\n1 for Uniform Cost Search\n2 for A* with Misplaced Tiles\n3 for A* with Manhattan Distance\n" << flush;
+    int search_type = 0;
+    cin >> search_type; 
     for(int i=0; i<(int)puzzles.size(); ++i) {
         Node problem(puzzles[i]);
+        problem.search = search_type-1;
         Node result = general_search(problem, &QUEUEING_FUNCTION);
         result.print_prob();
         if(result.fail) {
