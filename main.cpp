@@ -3,7 +3,8 @@
 Node general_search(Node &problem, void (*QUEUEING_FUNCTION)(p_queue&, const Node&, const vector<pair<int, int>> &)) {
     unsigned int nodesExpanded = 0;
     set<vector<vector<int>>> visited;
-    p_queue nodes = MAKE_QUEUE(MAKE_NODE(problem.initial_state, problem.search));
+    p_queue nodes = MAKE_QUEUE(MAKE_NODE(problem));
+    long long threshold = 100;
     while(true) {
         if(nodes.empty()) {
             Node failure(1);
@@ -12,10 +13,13 @@ Node general_search(Node &problem, void (*QUEUEING_FUNCTION)(p_queue&, const Nod
             return failure;
         }
 
-        Node node = REMOVE_FRONT(nodes);
-        if(visited.find(node.state) != visited.end()) {
-            continue;
+        if(nodes.size() >= threshold) {
+            threshold *= 10;
+            cout << "Nodes in frontier: " << nodes.size() << endl;
         }
+        
+        Node node = REMOVE_FRONT(nodes);
+        if(visited.find(node.state) != visited.end()) continue;
         node.expanded = nodesExpanded;
         if(node.GOAL_STATE()) return node;
         ++nodesExpanded;

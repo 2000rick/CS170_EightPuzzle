@@ -1,10 +1,10 @@
-#include <iostream>
-#include <vector>
-#include <queue>
-#include <sstream>
-#include <unordered_map>
 #include <set>
+#include <queue>
+#include <vector>
 #include <chrono>
+#include <sstream>
+#include <iostream>
+#include <unordered_map>
 using namespace std;
 
 class Node {
@@ -107,7 +107,7 @@ class Node {
                 sol << moves[i] << ", ";
             }
             string output = sol.str();
-            cout << output.substr(0, output.size()-2) << endl; // remove last comma and space in final output
+            cout << output.substr(0, output.size()-2) << "\n\n" << flush; // remove last comma and space in final output
         }
 
         void walk_through() {
@@ -155,16 +155,14 @@ struct comp {
 };
 
 typedef priority_queue<Node, vector<Node>, comp> p_queue;
-p_queue MAKE_QUEUE(Node node) {
+p_queue MAKE_QUEUE(const Node &node) {
     priority_queue<Node, vector<Node>, comp> nodes;
     nodes.push(node);
     return nodes;
 }
 
-Node MAKE_NODE(vector<vector<int>> &initial_state, int search) {
-    Node node(initial_state);
-    node.search = search;
-    return node;
+Node MAKE_NODE(const Node &problem) {
+    return problem;
 }
 
 Node REMOVE_FRONT(p_queue &nodes) {
@@ -291,13 +289,18 @@ void Run() {
         int search = 0;
         cin >> search; 
 
-        Node customPuzzle(3);
+        cout << "\nEnter n, the side length of the puzzle. For the 8 puzzle, n = sqrt(8+1) = 3."
+        << " For the 15 puzzle, n = sqrt(15+1) = 4, and so on.\nPROCEED WITH CAUTION for n >= 4.\n";
+        int puzzleSize = 3;
+        cin >> puzzleSize;
+
+        Node customPuzzle(puzzleSize);
         customPuzzle.search = search;
         customPuzzle.readPuzzle();
-
         chrono::steady_clock::time_point begin = chrono::steady_clock::now();
         Node solution = general_search(customPuzzle, &QUEUEING_FUNCTION);
         chrono::steady_clock::time_point end = chrono::steady_clock::now();
+
         cout << "Time Elapsed: " << chrono::duration_cast<chrono::milliseconds>(end - begin).count() << " milliseconds or about "
         << chrono::duration_cast<chrono::seconds> (end - begin).count() << " seconds\n";
 
