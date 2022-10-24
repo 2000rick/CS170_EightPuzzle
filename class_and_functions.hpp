@@ -22,6 +22,7 @@ class Node {
         int search=3;   // search type: 1 = Uniform Cost, 2 = A* w/ Misplaced Tiles, 3 = A* w/ Manhattan Distance. Default to Manhattan.
         bool fail=0;    // denote failure node
         unsigned int expanded=0; // number of nodes expanded
+        unsigned int queueSize=0; // the maximum size of the queue (nodes in frontier)
 
         Node(int size) {
             n = size;
@@ -47,23 +48,11 @@ class Node {
             initial_state = state;
         }
 
-        void setPuzzle() {
-            state = {
-                {1, 2, 3},
-                {4, 5, 6},
-                {0, 7, 8}
-            };
-            initial_state = state;
-        }
-
-        void setPuzzle(vector<vector<int>> &puzzle) {
-            initial_state = puzzle;
-            state = puzzle;
-        }
-
         bool GOAL_STATE() {
+            //We know the blank tile has to be in the bottom right corner
             if(state[n-1][n-1] != 0) return false;
 
+            //Check if the tiles are in sorted order [1 to n^2-1] (excluding the blank tile)
             state[n-1][n-1] = state[n-1][n-2] + 1;
             int count = 1;
             for (int i = 0; i < n; ++i) {
@@ -178,11 +167,6 @@ bool valid_index(int r, int c, int n) {
 /*Observe that we can calculate the goal state for any value 'x' using:
  row = (x-1)/n and col = (x-1)%n, the -1 is because of 0 indexing. */
 int calcManhattan(const vector<vector<int>> &state) {
-    static int first = 0;
-    if(first == 0) {
-        first = 1;
-        cout << "Inside Manhattan" << endl;
-    }
     int n = state.size();
     int heuristic = 0; //This is h(n)
     int count = 0;
@@ -199,11 +183,6 @@ int calcManhattan(const vector<vector<int>> &state) {
 
 //count misplaced tiles
 int calcMisplaced(const vector<vector<int>> &state) { 
-    static int first = 0;
-    if(first == 0) {
-        first = 1;
-        cout << "Inside misplaced tiles" << endl;
-    }
     int n = state.size();
     int heuristic = 0; //This is h(n)
     int count = 0;
@@ -323,7 +302,8 @@ void Run() {
         solution.solution();
         if(!solution.fail)
             cout << "Solution Depth: " << solution.moves.size() << '\n';
-        cout << "Nodes Expanded: " << solution.expanded << '\n';
+        cout << "Nodes Expanded: " << solution.expanded << "\nMax Queue Size: " << solution.queueSize << '\n';
+        // solution.walk_through();
         cout << "=======================================================================\n\n" << flush;
     }
 
@@ -338,14 +318,19 @@ void Run() {
     for(int i=0; i<(int)puzzles.size(); ++i) {
         Node problem(puzzles[i]);
         problem.search = search_type;
+        chrono::steady_clock::time_point begin = chrono::steady_clock::now();
         Node result = general_search(problem, &QUEUEING_FUNCTION);
+        chrono::steady_clock::time_point end = chrono::steady_clock::now();
+
         result.print_prob();
+        cout << "\nTime Elapsed: " << chrono::duration_cast<chrono::milliseconds>(end - begin).count() << " milliseconds or about "
+        << chrono::duration_cast<chrono::seconds> (end - begin).count() << " seconds\n";
         if(result.fail)
             cout << "\nFAILURE\n";
         else
             cout << "\nSUCCESS\n";
         result.solution();
-        cout << "Solution Depth: " << result.moves.size() << '\n' << "Nodes Expanded: " << result.expanded << '\n';
+        cout << "Solution Depth: " << result.moves.size() << "\nNodes Expanded: " << result.expanded << "\nMax Queue Size: " << result.queueSize << '\n';
         // result.walk_through();
         cout << "=======================================================================\n\n" << flush;
     }
