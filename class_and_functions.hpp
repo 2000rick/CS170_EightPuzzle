@@ -19,7 +19,7 @@ class Node {
         int n;          // size of puzzle (n x n)
         int cost=0;     // determines the order in queue, g(n) + h(n) where h(n) is 0 for Uniform Cost Search
         int current=0;  // this is g(n) in A*
-        int search=0;   // search type: 0 = Uniform Cost, 1 = A* w/ Misplaced Tiles, 2 = A* w/ Manhattan Distance
+        int search=3;   // search type: 1 = Uniform Cost, 2 = A* w/ Misplaced Tiles, 3 = A* w/ Manhattan Distance. Default to Manhattan.
         bool fail=0;    // denote failure node
         unsigned int expanded=0; // number of nodes expanded
 
@@ -178,6 +178,11 @@ bool valid_index(int r, int c, int n) {
 /*Observe that we can calculate the goal state for any value 'x' using:
  row = (x-1)/n and col = (x-1)%n, the -1 is because of 0 indexing. */
 int calcManhattan(const vector<vector<int>> &state) {
+    static int first = 0;
+    if(first == 0) {
+        first = 1;
+        cout << "Inside Manhattan" << endl;
+    }
     int n = state.size();
     int heuristic = 0; //This is h(n)
     int count = 0;
@@ -194,6 +199,11 @@ int calcManhattan(const vector<vector<int>> &state) {
 
 //count misplaced tiles
 int calcMisplaced(const vector<vector<int>> &state) { 
+    static int first = 0;
+    if(first == 0) {
+        first = 1;
+        cout << "Inside misplaced tiles" << endl;
+    }
     int n = state.size();
     int heuristic = 0; //This is h(n)
     int count = 0;
@@ -228,8 +238,10 @@ void QUEUEING_FUNCTION(p_queue &nodes, const Node &node, const vector<pair<int, 
             expanded.moves.push_back(expanded.operators_map[i]);
             expanded.current += 1;
             expanded.cost = expanded.current;
-            if(expanded.search == 1) expanded.cost += calcMisplaced(expanded.state);
-            else if(expanded.search == 2) expanded.cost += calcManhattan(expanded.state);
+            if(expanded.search == 2)
+                expanded.cost += calcMisplaced(expanded.state);
+            else if(expanded.search == 3)
+                expanded.cost += calcManhattan(expanded.state);
             nodes.push(expanded);
         }
     }
@@ -304,13 +316,13 @@ void Run() {
         cout << "Time Elapsed: " << chrono::duration_cast<chrono::milliseconds>(end - begin).count() << " milliseconds or about "
         << chrono::duration_cast<chrono::seconds> (end - begin).count() << " seconds\n";
 
-        if(solution.fail) cout << "\nFailure\n";
-        else cout << "\nSUCCESS!\n";
-
+        if(solution.fail) 
+            cout << "\nFailure\n";
+        else 
+            cout << "\nSUCCESS!\n";
         solution.solution();
-        if(!solution.fail) {
+        if(!solution.fail)
             cout << "Solution Depth: " << solution.moves.size() << '\n';
-        }
         cout << "Nodes Expanded: " << solution.expanded << '\n';
         cout << "=======================================================================\n\n" << flush;
     }
@@ -325,15 +337,13 @@ void Run() {
 
     for(int i=0; i<(int)puzzles.size(); ++i) {
         Node problem(puzzles[i]);
-        problem.search = search_type-1;
+        problem.search = search_type;
         Node result = general_search(problem, &QUEUEING_FUNCTION);
         result.print_prob();
-        if(result.fail) {
+        if(result.fail)
             cout << "\nFAILURE\n";
-        }
-        else {
+        else
             cout << "\nSUCCESS\n";
-        }
         result.solution();
         cout << "Solution Depth: " << result.moves.size() << '\n' << "Nodes Expanded: " << result.expanded << '\n';
         // result.walk_through();
