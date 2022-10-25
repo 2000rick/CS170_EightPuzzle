@@ -10,6 +10,7 @@ Node general_search(Node &problem, void (*QUEUEING_FUNCTION)(p_queue&, const Nod
         if(nodes.empty()) {
             Node failure(1);
             failure.expanded = nodesExpanded;
+            failure.queueSize = queueMaxSize;
             failure.fail = true;
             return failure;
         }

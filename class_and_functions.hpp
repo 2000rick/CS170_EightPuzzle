@@ -323,8 +323,8 @@ void Run() {
         chrono::steady_clock::time_point end = chrono::steady_clock::now();
 
         result.print_prob();
-        cout << "\nTime Elapsed: " << chrono::duration_cast<chrono::milliseconds>(end - begin).count() << " milliseconds or about "
-        << chrono::duration_cast<chrono::seconds> (end - begin).count() << " seconds\n";
+        cout << "\nTime Elapsed: " << chrono::duration_cast<chrono::microseconds>(end - begin).count() << " microseconds or "
+        << chrono::duration_cast<chrono::milliseconds> (end - begin).count() << " miliseconds\n";
         if(result.fail)
             cout << "\nFAILURE\n";
         else
