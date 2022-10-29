@@ -145,7 +145,7 @@ struct comp {
 
 typedef priority_queue<Node, vector<Node>, comp> p_queue;
 p_queue MAKE_QUEUE(const Node &node) {
-    priority_queue<Node, vector<Node>, comp> nodes;
+    p_queue nodes;
     nodes.push(node);
     return nodes;
 }
