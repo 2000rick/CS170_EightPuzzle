@@ -172,7 +172,7 @@ int calcManhattan(const vector<vector<int>> &state) {
     int count = 0;
     for(int i=0; i<n; ++i) {
         for(int j=0; j<n; ++j) {
-            if(state[i][j] == 0 || state[i][j] == ++count) continue;
+            if(state[i][j] == ++count || state[i][j] == 0) continue;
             int row = (state[i][j]-1) / n;
             int col = (state[i][j]-1) % n;
             heuristic += abs(row-i) + abs(col-j);
@@ -188,7 +188,7 @@ int calcMisplaced(const vector<vector<int>> &state) {
     int count = 0;
     for(int i=0; i<n; ++i) {
         for(int j=0; j<n; ++j) {
-            if(state[i][j] == 0 || state[i][j] == ++count) continue;
+            if(state[i][j] == ++count || state[i][j] == 0) continue;
             ++heuristic;
         }
     }
@@ -269,6 +269,11 @@ void Run() {
             {0, 7, 2},
             {4, 6, 1},
             {3, 5, 8}
+        },
+        { // Depth 31
+            {6, 4, 7},
+            {8, 5, 0},
+            {3, 2, 1}
         }
     };
 
@@ -307,24 +312,46 @@ void Run() {
         cout << "=======================================================================\n\n" << flush;
     }
 
-    cout << "Would you like to run all 8 sample puzzles? (y/n): " << flush;
+    cout << "Would you like to run all 9 sample puzzles? (y/n): " << flush;
     cin >> choice;
-    if(choice != 'y' && choice != 'Y') return;
+    if(choice == 'y' || choice == 'Y') {
+        cout << "Enter search type:\n1 for Uniform Cost Search\n2 for A* with Misplaced Tiles\n3 for A* with Manhattan Distance\n" << flush;
+        int search_type = 0;
+        cin >> search_type; 
 
-    cout << "Enter search type:\n1 for Uniform Cost Search\n2 for A* with Misplaced Tiles\n3 for A* with Manhattan Distance\n" << flush;
-    int search_type = 0;
-    cin >> search_type; 
+        for(int i=0; i<(int)puzzles.size(); ++i) {
+            Node problem(puzzles[i]);
+            problem.search = search_type;
+            chrono::steady_clock::time_point begin = chrono::steady_clock::now();
+            Node result = general_search(problem, &QUEUEING_FUNCTION);
+            chrono::steady_clock::time_point end = chrono::steady_clock::now();
 
-    for(int i=0; i<(int)puzzles.size(); ++i) {
-        Node problem(puzzles[i]);
+            result.print_prob();
+            cout << "\nTime Elapsed: " << chrono::duration_cast<chrono::milliseconds> (end - begin).count() << " milliseconds\n";
+            if(result.fail)
+                cout << "\nFAILURE\n";
+            else
+                cout << "\nSUCCESS\n";
+            result.solution();
+            cout << "Solution Depth: " << result.moves.size() << "\nNodes Expanded: " << result.expanded << "\nMax Queue Size: " << result.queueSize << '\n';
+            // result.walk_through();
+            cout << "=======================================================================\n\n" << flush;
+        }
+    }
+    else {
+        cout << "Enter the sample puzzle you would like to run (1-9): " << flush;
+        cin >> choice;
+        cout << "Enter search type:\n1 for Uniform Cost Search\n2 for A* with Misplaced Tiles\n3 for A* with Manhattan Distance\n" << flush;
+        int search_type = 0;
+        cin >> search_type;
+        Node problem(puzzles[choice - '1']);
         problem.search = search_type;
+        problem.print_prob();
         chrono::steady_clock::time_point begin = chrono::steady_clock::now();
         Node result = general_search(problem, &QUEUEING_FUNCTION);
         chrono::steady_clock::time_point end = chrono::steady_clock::now();
 
-        result.print_prob();
-        cout << "\nTime Elapsed: " << chrono::duration_cast<chrono::microseconds>(end - begin).count() << " microseconds or "
-        << chrono::duration_cast<chrono::milliseconds> (end - begin).count() << " miliseconds\n";
+        cout << "\nTime Elapsed: " << chrono::duration_cast<chrono::milliseconds> (end - begin).count() << " milliseconds\n";
         if(result.fail)
             cout << "\nFAILURE\n";
         else

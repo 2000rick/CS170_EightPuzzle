@@ -17,10 +17,15 @@ Node general_search(Node &problem, void (*QUEUEING_FUNCTION)(p_queue&, const Nod
         
         Node node = REMOVE_FRONT(nodes);
         if(visited.find(node.state) != visited.end()) continue;
+        cout << "The best state to expand with a g(n) = " << node.current << " and h(n) = " << node.cost - node.current << " is:\n";
+        node.print();
         ++nodesExpanded;
         node.expanded = nodesExpanded;
         node.queueSize = queueMaxSize;
-        if(node.GOAL_STATE()) return node;
+        if(node.GOAL_STATE()) {
+            cout << "Goal state!" << endl;
+            return node; 
+        }
         visited.insert(node.state);
         QUEUEING_FUNCTION(nodes, node, node.OPERATORS);
     }
@@ -29,7 +34,9 @@ Node general_search(Node &problem, void (*QUEUEING_FUNCTION)(p_queue&, const Nod
 }
 
 int main() {
-    Run();
+    ios_base::sync_with_stdio(false);
+    cin.tie(0);
     
+    Run();
     return 0;
 }
