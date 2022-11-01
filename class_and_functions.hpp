@@ -37,7 +37,7 @@ class Node {
         }
 
         void readPuzzle() {
-            cout << "Enter the puzzle: " << endl;
+            cout << "\nEnter the puzzle: \n";
             cout << "(Number by number, separated by a space)" << endl;
             for (int i = 0; i < n; ++i) {
                 for (int j = 0; j < n; ++j) {
@@ -137,6 +137,10 @@ class Node {
         }
 };
 
+
+int calcManhattan(const vector<vector<int>> &state);
+int calcMisplaced(const vector<vector<int>> &state);
+
 /*This is a modified custom comparator (for priority queue specifically), original version was taken from here:
 https://www.geeksforgeeks.org/stl-priority-queue-for-structure-or-class/*/
 struct comp {
@@ -144,13 +148,17 @@ struct comp {
 };
 
 typedef priority_queue<Node, vector<Node>, comp> p_queue;
-p_queue MAKE_QUEUE(const Node &node) {
+p_queue MAKE_QUEUE(Node node) {
     p_queue nodes;
+    if(node.search == 2)
+        node.cost += calcMisplaced(node.state);
+    else if(node.search == 3)
+        node.cost += calcManhattan(node.state);
     nodes.push(node);
     return nodes;
 }
 
-Node MAKE_NODE(const Node &problem) {
+Node MAKE_NODE(Node problem) {
     return problem;
 }
 
@@ -281,18 +289,18 @@ void Run() {
     char choice;
     cin >> choice;
     if(choice == 'y' || choice == 'Y') {
-        cout << "Enter search type:\n1 for Uniform Cost Search\n2 for A* with Misplaced Tiles\n3 for A* with Manhattan Distance\n" << flush;
-        int search = 0;
-        cin >> search; 
-
         cout << "\nEnter n, the side length of the puzzle. For the 8 puzzle, n = sqrt(8+1) = 3."
-        << " For the 15 puzzle, n = sqrt(15+1) = 4, and so on.\nPROCEED WITH CAUTION for n >= 4.\n";
+        << " For the 15 puzzle, n = sqrt(15+1) = 4, and so on.\nPROCEED WITH CAUTION for n >= 4." << endl;
         int puzzleSize = 3;
         cin >> puzzleSize;
 
         Node customPuzzle(puzzleSize);
-        customPuzzle.search = search;
         customPuzzle.readPuzzle();
+        cout << "Enter search type:\n1 for Uniform Cost Search\n2 for A* with Misplaced Tiles\n3 for A* with Manhattan Distance\n" << flush;
+        int search = 0;
+        cin >> search; 
+        customPuzzle.search = search;
+
         chrono::steady_clock::time_point begin = chrono::steady_clock::now();
         Node solution = general_search(customPuzzle, &QUEUEING_FUNCTION);
         chrono::steady_clock::time_point end = chrono::steady_clock::now();
