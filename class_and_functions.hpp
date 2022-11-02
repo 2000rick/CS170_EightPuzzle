@@ -144,7 +144,12 @@ int calcMisplaced(const vector<vector<int>> &state);
 /*This is a modified custom comparator (for priority queue specifically), original version was taken from here:
 https://www.geeksforgeeks.org/stl-priority-queue-for-structure-or-class/*/
 struct comp {
-    inline bool operator()(Node const &a, Node const &b) { return a.cost > b.cost; }
+    inline bool operator()(Node const &a, Node const &b) {
+        if(a.cost == b.cost) { // edge case: if costs (f(n)) are equal, prioritize lower (g(n))
+            return a.current > b.current;
+        }
+        return a.cost > b.cost;
+    }
 };
 
 typedef priority_queue<Node, vector<Node>, comp> p_queue;
@@ -204,7 +209,7 @@ int calcMisplaced(const vector<vector<int>> &state) {
     return heuristic;
 }
 
-void QUEUEING_FUNCTION(p_queue &nodes, const Node &node, const vector<pair<int, int>> &OPERATORS) {
+void QUEUEING_FUNCTION(p_queue &nodes, const Node &node, const vector<pair<int, int>> &OPERATORS, set<vector<vector<int>>> &visited) {
     int rz=-1, cz=-1; // row and column of zero (aka the blank tile)
     for(int i=0; i<node.n && rz == -1; ++i) {
         for(int j=0; j<node.n; ++j) {
@@ -222,6 +227,7 @@ void QUEUEING_FUNCTION(p_queue &nodes, const Node &node, const vector<pair<int, 
         if (valid_index(r, c, node.n)) {
             Node expanded = node;
             swap(expanded.state[rz][cz], expanded.state[r][c]); // equivalent to moving the blank tile to the new position
+            if(visited.find(expanded.state) != visited.end()) continue;
             expanded.moves.push_back(expanded.operators_map[i]);
             expanded.current += 1;
             expanded.cost = expanded.current;
@@ -230,11 +236,12 @@ void QUEUEING_FUNCTION(p_queue &nodes, const Node &node, const vector<pair<int, 
             else if(expanded.search == 3)
                 expanded.cost += calcManhattan(expanded.state);
             nodes.push(expanded);
+            visited.insert(expanded.state);
         }
     }
 }
 
-Node general_search(Node &problem, void (*QUEUEING_FUNCTION)(p_queue&, const Node&, const vector<pair<int, int>> &));
+Node general_search(Node &problem, void (*QUEUEING_FUNCTION)(p_queue&, const Node&, const vector<pair<int, int>> &, set<vector<vector<int>>> &));
 
 void Run() {
     vector<vector<vector<int>>> puzzles = {
